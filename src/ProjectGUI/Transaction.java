@@ -4,22 +4,23 @@ import java.util.Date;
 
 public class Transaction {
     Date date;
-    double income ;
-    double expense;
-    double balance;
-    String note;
+    String type;
+    double amount ;
     String category;
+    String note;
 
-    public Transaction(Date d, double i, double e, double b, String n, String c) {
-        date = d;
-        income = i;
-        expense = e;
-        balance = b;
-        note = n;
-        category = c;
+    public Transaction(Date date, String type, double amount, String category, String note) {
+        this.date = date;
+        this.type = type;
+        this.amount = amount;
+        this.category = category;
+        this.note = note;
     }
-
-
+    public Date getDate(){return date;}
+    public String getType(){return type;}
+    public double getAmount(){return amount;}
+    public String getCategory(){return category;}
+    public String getNote(){return note;}
 }
 
 
