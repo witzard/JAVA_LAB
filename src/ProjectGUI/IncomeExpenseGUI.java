@@ -1,193 +1,186 @@
 package ProjectGUI;
 
 import com.toedter.calendar.JDateChooser;
-
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import com.toedter.calendar.JDateChooser;
+import java.util.Date;
 
-public class IncomeExpenseGUI extends JFrame implements ActionListener {
-        static JMenuBar menuBar;
-        static JPanel sidePanel, bottomPanel;
-        static JPanel datePanel, transactionPanel, categoryPanel, notePanel, actionPanel;
-        static JTextArea noteArea;
-        static JComboBox<String> categoryDropdown;
-        static JTextField incomeField, expenseField;
-        static JButton addButton;
-        static JDateChooser dateChooser;
-        static JTable recordTable;
-        static DefaultTableModel tableModel;
-        Sheet sheet = new Sheet();
+public class IncomeExpenseGUI extends JFrame {
+    String fileName;
+    private final JDateChooser dateChooser;
+    private final JComboBox<String> typeComboBox;
+    private final JTextField amountField;
+    private final JComboBox<String> categoryComboBox;
+    private final JTextArea noteArea;
+    private final Sheet tableModel;
+    private final JLabel balanceLabel;
+    private double balance;
 
-        public IncomeExpenseGUI() {
-            //    TOP_PANEL     ////////////////////////////////////////////////////////
-            menuBar = new JMenuBar();
-            JMenu fileMenu = new JMenu("File");
-            JMenuItem newFile = new JMenuItem("New File");
-            newFile.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    ProjectGUI.Main newWindow = new ProjectGUI.Main();
-                    newWindow.setTitle("Untitled Transaction");
-                    newWindow.setVisible(true);
-
-                }
-            });
-            JMenuItem openFile = new JMenuItem("Open File");
-            JMenuItem saveFile = new JMenuItem("Save File");
-            JMenuItem renameFile = new JMenuItem("Rename File");
-            JMenuItem dash = new JMenuItem("------------------------");
-            JMenuItem newSheet = new JMenuItem("New Sheet");
-            JMenuItem openSheet = new JMenuItem("Open Sheet");
-            JMenuItem renameSheet = new JMenuItem("Rename Sheet");
-            fileMenu.add(newFile);
-            fileMenu.add(openFile);
-            fileMenu.add(saveFile);
-            fileMenu.add(renameFile);
-            fileMenu.add(dash);
-            fileMenu.add(newSheet);
-            fileMenu.add(openSheet);
-            fileMenu.add(renameSheet);
-            menuBar.add(fileMenu);
-            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            JMenu editMenu = new JMenu("Edit");
-            //JMenuItem edit = new JMenuItem("Edit transaction");
-            JMenuItem remove = new JMenuItem("Remove transaction");
-            remove.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    tableModel.setRowCount(0);
-                    sheet.emptyTransaction();
-                }
-            });
-            //editMenu.add(edit);
-            editMenu.add(remove);
-            menuBar.add(editMenu);
-            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-            JMenu helpMenu = new JMenu("Help");
-            JMenuItem help = new JMenuItem("Help");
-            help.addActionListener(e -> JOptionPane.showMessageDialog(null, "Nah, I can not help ya."));
-            helpMenu.add(help);
-            menuBar.add(helpMenu);
+    public IncomeExpenseGUI(String fileName) {
+        this.fileName = fileName;
+        //    TOP_PANEL     ////////////////////////////////////////////////////////
+        JMenuBar menuBar = getjMenuBar();
 
 //     SIDE_PANEL       ////////////////////////////////////////////////////////
-            JPanel sidePanelBack = new JPanel(new BorderLayout());
-            sidePanelBack.add(setCustomBorder(20, 1024), BorderLayout.EAST);
-            sidePanelBack.add(setCustomBorder(20, 1024), BorderLayout.WEST);
-            sidePanelBack.add(setCustomBorder(300, 20), BorderLayout.NORTH);
-            sidePanelBack.add(setCustomBorder(300, 20), BorderLayout.SOUTH);
-            sidePanel = new JPanel(new GridLayout(5, 1));
-            sidePanel.setBackground(Color.BLACK);
-            sidePanel.setPreferredSize(new Dimension(300, 1024));
+        JPanel sidePanel = new JPanel(new GridLayout(4,1));
+        sidePanel.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
+        sidePanel.setPreferredSize(new Dimension(350, 1024));
 
-            datePanel = new JPanel();
-            datePanel.setBackground(Color.BLACK);
-            datePanel.add(setCustomTextFormat("date"));
-            dateChooser = new JDateChooser();
-            dateChooser.setPreferredSize(new Dimension(290, 25));
-            datePanel.add(dateChooser);
+        JPanel datePanel = new JPanel(new GridLayout(2,1));
+        dateChooser = new JDateChooser();
+        dateChooser.setBorder(BorderFactory.createEmptyBorder(20,0,20,0));
+        datePanel.add(setCustomTextFormat("Date & Time:"));
+        datePanel.add(dateChooser);
 
-            JPanel transactionPanelBack = new JPanel(new BorderLayout());
-            transactionPanel = new JPanel(new GridLayout(2, 2, 10, 10));
-            transactionPanel.setBackground(Color.BLACK);
-            transactionPanelBack.add(transactionPanel);
-            transactionPanel.add(setCustomTextFormat("Income"));
-            transactionPanel.add(setCustomTextFormat("Expense"));
-            incomeField = new JTextField();
-            transactionPanel.add(incomeField);
-            expenseField = new JTextField();
-            transactionPanel.add(expenseField);
-            transactionPanelBack.add(setCustomBorder(5, 150), BorderLayout.EAST);
-            transactionPanelBack.add(setCustomBorder(5, 150), BorderLayout.WEST);
-            transactionPanelBack.add(setCustomBorder(300, 35), BorderLayout.NORTH);
-            transactionPanelBack.add(setCustomBorder(300, 25), BorderLayout.SOUTH);
+        JPanel transactionPanel = new JPanel(new GridLayout(2,2,10,10));
 
-            categoryPanel = new JPanel();
-            categoryPanel.setBackground(Color.BLACK);
-            categoryPanel.add(setCustomTextFormat("Category"));
-            categoryDropdown = new JComboBox<>(new String[]{" ", "Food", "Parent", "Drink", "Salary", "Electric Bills", "Water Bills", "Internet"});
-            categoryDropdown.setEditable(true);
-            categoryDropdown.setPreferredSize(new Dimension(290, 25));
-            categoryPanel.add(categoryDropdown);
+        JPanel fieldMargin = new JPanel(new BorderLayout());
+        amountField = new JTextField(20);
+        amountField.setPreferredSize(new Dimension(30,37));
+        fieldMargin.add(amountField,BorderLayout.SOUTH);
 
-            notePanel = new JPanel();
-            notePanel.setBackground(Color.BLACK);
-            notePanel.add(setCustomTextFormat("Note"));
-            noteArea = new JTextArea(30, 30);
-            noteArea.setPreferredSize(new Dimension(260, 30));
-            notePanel.add(noteArea);
+        typeComboBox = new JComboBox<>(new String[]{"   Income", "   Expense"});
+        typeComboBox.setBorder(BorderFactory.createEmptyBorder(30,0,0,0));
 
-            actionPanel = new JPanel();
-            actionPanel.setBackground(Color.BLACK);
-            addButton = new JButton("Add Record");
-            actionPanel.add(addButton);
+        JPanel buttonMargin = new JPanel(new BorderLayout());
+        JButton addButton = new JButton("Add Record");
+        addButton.addActionListener(e -> addRecord());
+        addButton.setPreferredSize(new Dimension(30,37));
+        buttonMargin.add(addButton,BorderLayout.SOUTH);
 
-            sidePanel.add(datePanel);
-            sidePanel.add(transactionPanelBack);
-            sidePanel.add(categoryPanel);
-            sidePanel.add(notePanel);
-            sidePanel.add(actionPanel);
-            sidePanelBack.add(sidePanel);
+        transactionPanel.add(setCustomTextFormat("Amount:"));
+        transactionPanel.add(fieldMargin);
+        transactionPanel.add(typeComboBox);
+        transactionPanel.add(buttonMargin);
+
+        JPanel categoryPanel = new JPanel(new GridLayout(2,1));
+        categoryPanel.add(setCustomTextFormat("Category:"));
+        categoryComboBox = new JComboBox<>(new String[]{" ", "Food", "Parent", "Drink", "Salary", "Electric Bills", "Water Bills", "Internet"});
+        categoryComboBox.setEditable(true);
+        categoryComboBox.setBorder(BorderFactory.createEmptyBorder(30,0,0,0));
+        categoryPanel.add(categoryComboBox);
+
+        JPanel notePanel = new JPanel(new GridLayout(2,1));
+        noteArea = new JTextArea(30, 30);
+        noteArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        notePanel.add(setCustomTextFormat("Note:"));
+        notePanel.add(noteArea);
+
+        sidePanel.add(datePanel, BorderLayout.CENTER);
+        sidePanel.add(transactionPanel, BorderLayout.CENTER);
+        sidePanel.add(categoryPanel, BorderLayout.CENTER);
+        sidePanel.add(notePanel, BorderLayout.CENTER);
 //    BOTTOM_PANEL      ////////////////////////////////////////////////////////
-            bottomPanel = new JPanel();
-            bottomPanel.setBackground(Color.DARK_GRAY);
-            bottomPanel.setPreferredSize(new Dimension(1440, 60));
+        balance = 0.0;
+        balanceLabel = new JLabel("Balance: " + balance);
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.add(balanceLabel);
+        bottomPanel.setPreferredSize(new Dimension(1440, 60));
+
+        //bottomPanel.setBackground(Color.DARK_GRAY);
 //    CENTER_PANEL      ////////////////////////////////////////////////////////
-            JPanel sheetSelector = new JPanel();
-            sheetSelector.setBackground(Color.DARK_GRAY);
-            recordTable = new JTable();
-            tableModel = new DefaultTableModel(new Object[]{" ", "Date", "Category", "Income", "Expense", "Balance", "Note"}, 0);
-            recordTable.setModel(tableModel);
+
+        tableModel = new Sheet();
+        JTable recordTable = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(recordTable);
+        recordTable.setFillsViewportHeight(true);
+
 //      FRAME      ////////////////////////////////////////////////////////
-            setTitle("Income & Expense - transaction1");
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            setSize(1440, 1024);
-            getContentPane().setBackground(Color.WHITE);
-            setLayout(new BorderLayout());
+        setTitle(fileName);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1440, 1024);
+        getContentPane().setBackground(Color.WHITE);
+        setLayout(new BorderLayout());
 
-            setJMenuBar(menuBar);
-            add(sidePanelBack, BorderLayout.WEST);
-            add(new JScrollPane(recordTable), BorderLayout.CENTER);
-            add(bottomPanel, BorderLayout.SOUTH);
-            addButton.addActionListener(this);
-        }
-
-
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (e.getSource() == addButton) {
-                sheet.addRecord(dateChooser.getDate(), incomeField.getText(), expenseField.getText(), (String) categoryDropdown.getSelectedItem(), noteArea.getText());
-                incomeField.setText("");
-                expenseField.setText("");
-                noteArea.setText("");
-                int rowCount = tableModel.getRowCount();
-                rowCount++;
-                Transaction data = sheet.transactionList.get(rowCount - 1);
-                tableModel.addRow(new Object[]{rowCount, data.getDate(), data.getCategory(), data.getIncome(), data.getExpense(), data.getBalance(), data.getNote()});
-            }
-        }
-
-        public Component setCustomTextFormat(String text) {
-            JLabel t = new JLabel();
-            t.setText(text);
-            t.setForeground(Color.WHITE);//change back later to white na
-            t.setHorizontalAlignment(SwingConstants.LEFT);
-            t.setHorizontalTextPosition(JLabel.LEFT);
-            t.setFont(new Font("JetBrains Mono", Font.PLAIN, 20));
-            return t;
-        }
-
-        public Component setCustomBorder(int width, int height) {
-            JPanel border = new JPanel();
-            border.setBackground(Color.BLACK);
-            border.setPreferredSize(new Dimension(width, height));
-            return border;
-        }
+        setJMenuBar(menuBar);
+        add(sidePanel, BorderLayout.WEST);
+        add(scrollPane, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
+        setVisible(true);
     }
 
+    private JMenuBar getjMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem newFile = new JMenuItem("New File");
+        newFile.addActionListener(e -> {new RenameFileFrame().setLocationRelativeTo(null);});
+        JMenuItem openFile = new JMenuItem("Open File");
+        JMenuItem saveFile = new JMenuItem("Save File");
+        saveFile.addActionListener(e -> {new SaveFileSystem(tableModel.getList(),fileName);});
+        JMenuItem renameFile = new JMenuItem("Rename File");
+        JMenuItem dash = new JMenuItem("------------------------");
+        JMenuItem newSheet = new JMenuItem("New Sheet");
+        JMenuItem openSheet = new JMenuItem("Open Sheet");
+        JMenuItem renameSheet = new JMenuItem("Rename Sheet");
+        fileMenu.add(newFile);
+        fileMenu.add(openFile);
+        fileMenu.add(saveFile);
+        fileMenu.add(renameFile);
+        fileMenu.add(dash);
+        fileMenu.add(newSheet);
+        fileMenu.add(openSheet);
+        fileMenu.add(renameSheet);
+        menuBar.add(fileMenu);
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        JMenu editMenu = new JMenu("Edit");
+        JMenuItem edit = new JMenuItem("Edit transaction");
+        JMenuItem remove = new JMenuItem("Remove transaction");
+        JMenuItem empty = new JMenuItem("Empty transaction");
+        editMenu.add(edit);
+        editMenu.add(remove);
+        editMenu.add(empty);
+        menuBar.add(editMenu);
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        JMenu helpMenu = new JMenu("Help");
+        JMenuItem help = new JMenuItem("Help");
+        help.addActionListener(e -> JOptionPane.showMessageDialog(null, "Nah, I can not help ya."));
+        helpMenu.add(help);
+        menuBar.add(helpMenu);
+        return menuBar;
+    }
 
+    private void addRecord() {
+        Date date = dateChooser.getDate();
+        String type = (String) typeComboBox.getSelectedItem();
+        String amountString = amountField.getText();
+        String category = (String) categoryComboBox.getSelectedItem();
+        String note = noteArea.getText();
+        double amount;
+        if (amountString.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Enter the Amount", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            amount = Double.parseDouble(amountString);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Invalid Amount Format", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (type.equals("Expense")) { amount *= -1; }
+
+        balance += amount;
+        balanceLabel.setText("Balance: " + balance);
+        Transaction transaction = new Transaction(date, type, amount, balance, category, note);
+        tableModel.addRecord(transaction);
+        clearInputField();
+    }
+    private void emptyTable(){
+       // tableModel.
+    }
+
+    private void clearInputField() {
+        typeComboBox.setSelectedIndex(0);
+        amountField.setText("");
+        categoryComboBox.setSelectedIndex(0);
+        noteArea.setText("");
+    }
+
+    public Component setCustomTextFormat(String text) {
+        JLabel t = new JLabel(text);
+        t.setForeground(Color.BLACK);//change back later to white na // mai woyyy
+        t.setHorizontalAlignment(SwingConstants.LEFT);
+        t.setVerticalAlignment(SwingConstants.BOTTOM);
+        t.setFont(new Font("JetBrains Mono", Font.BOLD, 20));
+        return t;
+    }
 }

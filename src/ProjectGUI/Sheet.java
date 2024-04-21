@@ -1,21 +1,10 @@
 package ProjectGUI;
 import javax.swing.table.AbstractTableModel;
+import java.io.Serializable;
 import java.util.ArrayList;
-
-public class Sheet extends AbstractTableModel {
+public class Sheet extends AbstractTableModel implements Serializable {
     private final ArrayList<Transaction> transactionList = new ArrayList<>();
-
-    private final String[] columnNames = {"Date","Type","Amount","Category","Note"};
-
-    public void deleteTransaction(){transactionList.removeLast();}
-
-    public void emptyTransaction(){transactionList.clear();}
-
-    public void addRecord(Transaction transaction) {
-       transactionList.add(transaction);
-       fireTableRowsInserted(transactionList.size()-1,transactionList.size()-1);
-    }
-
+    private final String[] columnNames = {"Date","Type","Amount","Balance","Category","Note"};
     @Override
     public int getRowCount() {return transactionList.size();}
 
@@ -32,9 +21,21 @@ public class Sheet extends AbstractTableModel {
             case 0 -> transaction.getDate();
             case 1 -> transaction.getType();
             case 2 -> transaction.getAmount();
-            case 3 -> transaction.getCategory();
-            case 4 -> transaction.getNote();
+            case 3 -> transaction.getBalance();
+            case 4 -> transaction.getCategory();
+            case 5 -> transaction.getNote();
             default -> null;
         };
+    }
+
+    public void emptyTransaction(){
+
+    }
+    public void addRecord(Transaction transaction) {
+        transactionList.add(transaction);
+        fireTableRowsInserted(transactionList.size()-1,transactionList.size()-1);
+    }
+    public ArrayList<Transaction> getList() {
+        return transactionList;
     }
 }
