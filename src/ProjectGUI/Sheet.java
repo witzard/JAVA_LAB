@@ -1,10 +1,13 @@
 package ProjectGUI;
 import javax.swing.table.AbstractTableModel;
-import java.io.Serializable;
+import javax.swing.table.TableColumnModel;
+import java.io.*;
 import java.util.ArrayList;
 public class Sheet extends AbstractTableModel implements Serializable {
     private final ArrayList<Transaction> transactionList = new ArrayList<>();
-    private final String[] columnNames = {"Date","Type","Amount","Balance","Category","Note"};
+    private final String[] columnNames = {" ","Date","Type","Amount","Balance","Category","Note"};
+    private final int[] columnWidths = {30,100, 100, 100, 100, 100, 200};
+
     @Override
     public int getRowCount() {return transactionList.size();}
 
@@ -18,18 +21,25 @@ public class Sheet extends AbstractTableModel implements Serializable {
     public Object getValueAt(int rowIndex, int columnIndex) {
         Transaction transaction = transactionList.get(rowIndex);
         return switch (columnIndex) {
-            case 0 -> transaction.getDate();
-            case 1 -> transaction.getType();
-            case 2 -> transaction.getAmount();
-            case 3 -> transaction.getBalance();
-            case 4 -> transaction.getCategory();
-            case 5 -> transaction.getNote();
+            case 0 -> rowIndex+1;
+            case 1 -> transaction.getDate();
+            case 2 -> transaction.getType();
+            case 3 -> transaction.getAmount();
+            case 4 -> transaction.getBalance();
+            case 5 -> transaction.getCategory();
+            case 6 -> transaction.getNote();
             default -> null;
         };
     }
-
+    public void removeLast(){
+        int last = transactionList.size()-1;
+        transactionList.remove(last);
+        fireTableRowsDeleted(last, last);
+    }
     public void emptyTransaction(){
-
+        int rowCount = transactionList.size();
+        transactionList.clear();
+        fireTableRowsDeleted(0, rowCount - 1);
     }
     public void addRecord(Transaction transaction) {
         transactionList.add(transaction);
@@ -38,4 +48,10 @@ public class Sheet extends AbstractTableModel implements Serializable {
     public ArrayList<Transaction> getList() {
         return transactionList;
     }
+    public void setColumnWidths(TableColumnModel columnModel) {
+        for (int i = 0; i < columnWidths.length && i < getColumnCount(); i++) {
+            columnModel.getColumn(i).setPreferredWidth(columnWidths[i]);
+        }
+    }
+
 }

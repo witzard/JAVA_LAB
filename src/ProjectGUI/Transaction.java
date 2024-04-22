@@ -15,14 +15,14 @@ public class Transaction implements Serializable {
         this.date = date;
         this.type = type;
         this.amount = amount;
-        this.balance = balance;
+        this.balance += balance;
         this.category = category;
         this.note = note;
     }
     public Date getDate(){return date;}
     public String getType(){return type;}
     public double getAmount(){return amount;}
-    public double getBalance(){return amount;}
+    public double getBalance(){return balance;}
     public String getCategory(){return category;}
     public String getNote(){return note;}
 }
