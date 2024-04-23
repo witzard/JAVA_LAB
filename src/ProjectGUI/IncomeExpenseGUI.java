@@ -129,6 +129,9 @@ public class IncomeExpenseGUI extends JFrame {
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++
         JMenu editMenu = new JMenu("Edit");
         JMenuItem edit = new JMenuItem("Edit transaction");
+        edit.addActionListener(e -> {
+            EditSheet editSheet = new EditSheet(true,tableModel.getList());
+        });
         JMenuItem remove = new JMenuItem("Remove transaction");
         remove.addActionListener(e -> tableModel.removeLast());
         JMenuItem empty = new JMenuItem("Empty transaction");

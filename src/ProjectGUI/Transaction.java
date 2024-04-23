@@ -3,6 +3,7 @@ package ProjectGUI;
 import java.io.Serializable;
 import java.util.Date;
 
+
 public class Transaction implements Serializable {
     Date date;
     String type;
@@ -10,7 +11,6 @@ public class Transaction implements Serializable {
     double balance ;
     String category;
     String note;
-
     public Transaction(Date date, String type, double amount,double balance, String category, String note) {
         this.date = date;
         this.type = type;
