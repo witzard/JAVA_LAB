@@ -1,10 +1,11 @@
 package ProjectGUI;
 
 import com.toedter.calendar.JDateChooser;
+
 import javax.swing.*;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
-import java.io.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -16,7 +17,6 @@ public class IncomeExpenseGUI extends JFrame {
     private final JTextArea noteArea;
     private final Sheet tableModel;
     private final JLabel balanceLabel;
-    private double balance;
     String fileName;
 
     public IncomeExpenseGUI(String fileName) {
@@ -25,45 +25,45 @@ public class IncomeExpenseGUI extends JFrame {
         JMenuBar menuBar = getjMenuBar();
 
 //     SIDE_PANEL       ////////////////////////////////////////////////////////
-        JPanel sidePanel = new JPanel(new GridLayout(4,1));
-        sidePanel.setBorder(BorderFactory.createEmptyBorder(10,20,10,20));
+        JPanel sidePanel = new JPanel(new GridLayout(4, 1));
+        sidePanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         sidePanel.setPreferredSize(new Dimension(350, 1024));
 
-        JPanel datePanel = new JPanel(new GridLayout(2,1));
+        JPanel datePanel = new JPanel(new GridLayout(2, 1));
         dateChooser = new JDateChooser();
-        dateChooser.setBorder(BorderFactory.createEmptyBorder(20,0,20,0));
+        dateChooser.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         datePanel.add(setCustomTextFormat("Date & Time:"));
         datePanel.add(dateChooser);
 
-        JPanel transactionPanel = new JPanel(new GridLayout(2,2,10,10));
+        JPanel transactionPanel = new JPanel(new GridLayout(2, 2, 10, 10));
 
         JPanel fieldMargin = new JPanel(new BorderLayout());
         amountField = new JTextField(20);
-        amountField.setPreferredSize(new Dimension(30,37));
-        fieldMargin.add(amountField,BorderLayout.SOUTH);
+        amountField.setPreferredSize(new Dimension(30, 37));
+        fieldMargin.add(amountField, BorderLayout.SOUTH);
 
         typeComboBox = new JComboBox<>(new String[]{"   Income", "   Expense"});
-        typeComboBox.setBorder(BorderFactory.createEmptyBorder(30,0,0,0));
+        typeComboBox.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
 
         JPanel buttonMargin = new JPanel(new BorderLayout());
         JButton addButton = new JButton("Add Record");
         addButton.addActionListener(e -> addRecord());
-        addButton.setPreferredSize(new Dimension(30,37));
-        buttonMargin.add(addButton,BorderLayout.SOUTH);
+        addButton.setPreferredSize(new Dimension(30, 37));
+        buttonMargin.add(addButton, BorderLayout.SOUTH);
 
         transactionPanel.add(setCustomTextFormat("Amount:"));
         transactionPanel.add(fieldMargin);
         transactionPanel.add(typeComboBox);
         transactionPanel.add(buttonMargin);
 
-        JPanel categoryPanel = new JPanel(new GridLayout(2,1));
+        JPanel categoryPanel = new JPanel(new GridLayout(2, 1));
         categoryPanel.add(setCustomTextFormat("Category:"));
         categoryComboBox = new JComboBox<>(new String[]{" ", "Food", "Parent", "Drink", "Salary", "Electric Bills", "Water Bills", "Internet"});
         categoryComboBox.setEditable(true);
-        categoryComboBox.setBorder(BorderFactory.createEmptyBorder(30,0,0,0));
+        categoryComboBox.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
         categoryPanel.add(categoryComboBox);
 
-        JPanel notePanel = new JPanel(new GridLayout(2,1));
+        JPanel notePanel = new JPanel(new GridLayout(2, 1));
         noteArea = new JTextArea(30, 30);
         noteArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         notePanel.add(setCustomTextFormat("Note:"));
@@ -74,19 +74,28 @@ public class IncomeExpenseGUI extends JFrame {
         sidePanel.add(categoryPanel, BorderLayout.CENTER);
         sidePanel.add(notePanel, BorderLayout.CENTER);
 //    BOTTOM_PANEL      ////////////////////////////////////////////////////////
-        balance = 0.0;
-        balanceLabel = new JLabel("Balance: " + balance);
+        balanceLabel = new JLabel("Balance: " + 0);
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(balanceLabel);
         bottomPanel.setPreferredSize(new Dimension(1440, 60));
         //bottomPanel.setBackground(Color.DARK_GRAY);
 //    CENTER_PANEL      ////////////////////////////////////////////////////////
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        JPanel sheetPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        //////////
+        sheetPanel.revalidate();
+        sheetPanel.repaint();
+
+        sheetPanel.setPreferredSize(new Dimension(1440, 35));
         tableModel = new Sheet();
         JTable recordTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(recordTable);
         recordTable.setFillsViewportHeight(true);
         TableColumnModel columnModel = recordTable.getColumnModel();
         tableModel.setColumnWidths(columnModel);
+
+        centerPanel.add(sheetPanel, BorderLayout.NORTH);
+        centerPanel.add(scrollPane);
 
 //      FRAME      ////////////////////////////////////////////////////////
         setTitle(fileName);
@@ -97,8 +106,9 @@ public class IncomeExpenseGUI extends JFrame {
 
         setJMenuBar(menuBar);
         add(sidePanel, BorderLayout.WEST);
-        add(scrollPane, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
+        pack();
         setVisible(true);
     }
 
@@ -108,18 +118,8 @@ public class IncomeExpenseGUI extends JFrame {
         JMenuItem newFile = new JMenuItem("New File");
         newFile.addActionListener(e -> new NameFileSystem(true).setLocationRelativeTo(null));
         JMenuItem openFile = new JMenuItem("Open File");
-        //openFile.addActionListener(e -> loadRecordsFromFile("win.dat"));
-        //openFile.addActionListener(e -> {
-//            if(e.getSource()==openFile){
-//                JFileChooser fileChooser = new JFileChooser();
-//                int response = fileChooser.showOpenDialog(null);
-//                if(response == JFileChooser.APPROVE_OPTION){
-//                    File file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-//                }
-//            }
-//        });
         JMenuItem saveFile = new JMenuItem("Save File");
-        saveFile.addActionListener(e -> new SaveFileSystem(tableModel.getList(),fileName));
+        saveFile.addActionListener(e -> new SaveFileSystem(tableModel.getList(), fileName));
 
         fileMenu.add(newFile);
         fileMenu.add(openFile);
@@ -130,13 +130,45 @@ public class IncomeExpenseGUI extends JFrame {
         JMenu editMenu = new JMenu("Edit");
         JMenuItem edit = new JMenuItem("Edit transaction");
         edit.addActionListener(e -> {
-            EditSheet editSheet = new EditSheet(true,tableModel.getList());
+            if (tableModel.getRowCount() != 0) {
+                new EditSheet(true, tableModel.getList(),tableModel);
+            } else {
+                JOptionPane.showMessageDialog(null, "The table is Empty, add some transactions.");
+            }
+            balanceLabel.setText("Balance: *" + tableModel.getTotalBalance());
+            tableModel.fireTableDataChanged();
+            validate();
+            revalidate();
+            repaint();
         });
+
         JMenuItem remove = new JMenuItem("Remove transaction");
-        remove.addActionListener(e -> tableModel.removeLast());
+        remove.addActionListener(e -> {
+            tableModel.removeLast();
+            if(!tableModel.getList().isEmpty()) {
+                balanceLabel.setText("Balance: " + tableModel.getList().getLast().balance);
+            }else{
+                balanceLabel.setText("Balance: " + 0);
+            }
+        });
+        JMenuItem refresh = new JMenuItem("Refresh transaction");
+        refresh.addActionListener(e ->{
+            ArrayList<Transaction> list = tableModel.getList();
+            list.addAll(tableModel.getList());
+            tableModel.emptyTransaction();
+            for (Transaction t : list){
+                if(t!=null) {
+                    tableModel.addRecord(t);
+                }
+            }
+        });
         JMenuItem empty = new JMenuItem("Empty transaction");
-        empty.addActionListener(e -> tableModel.emptyTransaction());
+        empty.addActionListener(e -> {
+            tableModel.emptyTransaction();
+            balanceLabel.setText("Balance: " + 0);
+        });
         editMenu.add(edit);
+        editMenu.add(refresh);
         editMenu.add(remove);
         editMenu.add(empty);
         menuBar.add(editMenu);
@@ -168,19 +200,17 @@ public class IncomeExpenseGUI extends JFrame {
             return;
         }
         assert type != null;
-        if (type.equals("   Income")) {
-            amount *= 1;
-        }
-        if (type.equals("   Expense")){
+        if (type.equals("   Expense")) {
             amount *= -1;
         }
 
-        balance += amount;
-        balanceLabel.setText("Balance: " + balance);
-        Transaction transaction = new Transaction(date, type, amount, balance, category, note);
+        Transaction transaction = new Transaction(date, type, amount, 0, category, note);
         tableModel.addRecord(transaction);
-        //clearInputField();
+        tableModel.updateBalance();
+        balanceLabel.setText("Balance: " + tableModel.getTotalBalance());
+        //clearInputField(); //  อย่าลืมเอาออกกกก
     }
+
     private void clearInputField() {
         typeComboBox.setSelectedIndex(0);
         amountField.setText("");
@@ -196,30 +226,4 @@ public class IncomeExpenseGUI extends JFrame {
         t.setFont(new Font("JetBrains Mono", Font.BOLD, 20));
         return t;
     }
-
-//    private void loadRecordsFromFile(String fileName) {
-//        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
-//            ArrayList<Transaction> loadedTransactions = new ArrayList<>();
-//            while (true) {
-//                try {
-//                    Transaction transaction = (Transaction) ois.readObject();
-//                    loadedTransactions.add(transaction);
-//                } catch (EOFException eof) {
-//                    break; // End of file reached
-//                } catch (ClassNotFoundException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//            for (Transaction transaction : loadedTransactions) {
-//                tableModel.addRecord(transaction);
-//                updateBalance(transaction.getAmount());
-//            }
-//        } catch (IOException e) {
-//            JOptionPane.showMessageDialog(null,e);
-//        }
-//    }
-//    private void updateBalance(double amount) {
-//        balance += amount;
-//        balanceLabel.setText("Balance: " + balance);
-//    }
 }

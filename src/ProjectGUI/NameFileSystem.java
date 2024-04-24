@@ -5,7 +5,6 @@ import java.awt.*;
 
 public class NameFileSystem extends JFrame {
     private String fileName;
-
     NameFileSystem(boolean open) {
         if (open) {
             setTitle("New transaction");
@@ -49,7 +48,6 @@ public class NameFileSystem extends JFrame {
             setVisible(true);
         }
     }
-
     public String getFileName() {
         return fileName;
     }

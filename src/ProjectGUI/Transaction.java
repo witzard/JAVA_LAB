@@ -15,7 +15,7 @@ public class Transaction implements Serializable {
         this.date = date;
         this.type = type;
         this.amount = amount;
-        this.balance += balance;
+        this.balance = balance;
         this.category = category;
         this.note = note;
     }
